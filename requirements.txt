@@ -1,0 +1,4 @@
+Flask
+flask-cors
+gunicorn
+python-3.10
