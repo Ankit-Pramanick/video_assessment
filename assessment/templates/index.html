@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Progress Tracker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 py-6 px-8">
+        <h2 class="text-2xl font-bold text-white flex items-center">
+          <i class="fas fa-play-circle mr-3"></i>
+          <span>Interactive Video Progress Tracker</span>
+        </h2>
+      </div>
+      
+      <!-- Video Section -->
+      <div class="p-6">
+        <div class="relative aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden shadow-md">
+          <video id="lectureVideo" class="w-full" controls>
+            <source src="/static/mylivewallpapers-com-Blue-Eyes-Sung-Jinwoo-4K.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        
+        <!-- Controls & Progress Section -->
+        <div class="mt-6 space-y-4">
+          <!-- Progress Bar -->
+          <div class="relative pt-1">
+            <p class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold inline-block text-indigo-600">
+                Progress
+              </span>
+              <span id="progressTime" class="text-xs font-semibold inline-block text-indigo-600">
+                0:00 / 0:00
+              </span>
+            </p>
+            <div class="relative">
+              <div id="progressBarContainer" class="overflow-hidden h-4 text-xs flex rounded-full bg-gray-200 cursor-pointer">
+                <div id="watchedSegments" class="absolute inset-0">
+                  <!-- Watched segments will be added here -->
+                </div>
+                <div id="progressFill" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <div id="hoverPreview" class="hidden absolute bottom-full mb-2 transform -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded">0:00</div>
+            </div>
+          </div>
+          
+          <!-- Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg shadow-sm">
+              <div class="flex items-center">
+                <div class="bg-indigo-100 p-3 rounded-full">
+                  <i class="fas fa-percentage text-indigo-500"></i>
+                </div>
+                <div class="ml-4">
+                  <p class="text-gray-500 text-sm">Completion</p>
+                  <p class="font-bold text-xl">
+                    <span id="progressPercent">0</span>%
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg shadow-sm">
+              <div class="flex items-center">
+                <div class="bg-indigo-100 p-3 rounded-full">
+                  <i class="fas fa-clock text-indigo-500"></i>
+                </div>
+                <div class="ml-4">
+                  <p class="text-gray-500 text-sm">Watched time</p>
+                  <p id="watchedTime" class="font-bold text-xl">0:00</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg shadow-sm">
+              <div class="flex items-center">
+                <div class="bg-indigo-100 p-3 rounded-full">
+                  <i class="fas fa-history text-indigo-500"></i>
+                </div>
+                <div class="ml-4">
+                  <p class="text-gray-500 text-sm">Remaining</p>
+                  <p id="remainingTime" class="font-bold text-xl">0:00</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Controls -->
+          <div class="flex flex-wrap space-x-2 mt-4">
+            <button id="restartBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-md transition duration-200 flex items-center">
+              <i class="fas fa-redo-alt mr-2"></i> Restart
+            </button>
+            <button id="saveBtn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition duration-200 flex items-center">
+              <i class="fas fa-save mr-2"></i> Save Progress
+            </button>
+            <button id="resetBtn" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition duration-200 flex items-center">
+              <i class="fas fa-trash-alt mr-2"></i> Reset Progress
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Segments Visualization -->
+      <div class="p-6 bg-gray-50 border-t border-gray-200">
+        <h3 class="font-medium text-gray-700 mb-3">Watched Segments</h3>
+        <div id="segmentsVisualization" class="h-8 bg-gray-200 rounded-md relative overflow-hidden">
+          <!-- Segments will be visualized here -->
+        </div>
+        <div class="flex justify-between text-xs text-gray-500 mt-1">
+          <span>0:00</span>
+          <span id="totalDuration">0:00</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Notifications -->
+    <div id="notification" class="fixed bottom-4 right-4 bg-green-500 text-white py-2 px-4 rounded-md shadow-lg transform transition-transform duration-300 translate-y-20 opacity-0 flex items-center">
+      <i class="fas fa-check-circle mr-2"></i>
+      <span id="notificationText">Progress saved successfully!</span>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('lectureVideo');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressFill = document.getElementById('progressFill');
+    const progressBarContainer = document.getElementById('progressBarContainer');
+    const watchedSegments = document.getElementById('watchedSegments');
+    const segmentsVisualization = document.getElementById('segmentsVisualization');
+    const progressTime = document.getElementById('progressTime');
+    const watchedTime = document.getElementById('watchedTime');
+    const remainingTime = document.getElementById('remainingTime');
+    const totalDuration = document.getElementById('totalDuration');
+    const notification = document.getElementById('notification');
+    const hoverPreview = document.getElementById('hoverPreview');
+    const restartBtn = document.getElementById('restartBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let segments = [];
+    let currentStart = null;
+    const userId = 'user123'; // You can set dynamically based on login info
+
+    // Format time from seconds to MM:SS
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+      const notificationText = document.getElementById('notificationText');
+      notificationText.textContent = message;
+      
+      notification.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
+      if (type === 'success') {
+        notification.classList.add('bg-green-500');
+      } else if (type === 'error') {
+        notification.classList.add('bg-red-500');
+      } else {
+        notification.classList.add('bg-blue-500');
+      }
+      
+      notification.classList.remove('translate-y-20', 'opacity-0');
+      notification.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(() => {
+        notification.classList.remove('translate-y-0', 'opacity-100');
+        notification.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // Update the visual representation of watched segments
+    function updateSegmentsVisualization() {
+      if (!video.duration) return;
+      
+      // Clear previous visualizations
+      segmentsVisualization.innerHTML = '';
+      watchedSegments.innerHTML = '';
+      
+      // Add segments
+      for (let [start, end] of segments) {
+        const segmentWidth = ((end - start) / video.duration) * 100;
+        const segmentLeft = (start / video.duration) * 100;
+        
+        // Create segment for the segments visualization
+        const segmentEl = document.createElement('div');
+        segmentEl.className = 'absolute bg-indigo-400';
+        segmentEl.style.left = `${segmentLeft}%`;
+        segmentEl.style.width = `${segmentWidth}%`;
+        segmentEl.style.top = '0';
+        segmentEl.style.bottom = '0';
+        segmentsVisualization.appendChild(segmentEl);
+        
+        // Create segment for the progress bar
+        const progressSegmentEl = document.createElement('div');
+        progressSegmentEl.className = 'absolute bg-indigo-200';
+        progressSegmentEl.style.left = `${segmentLeft}%`;
+        progressSegmentEl.style.width = `${segmentWidth}%`;
+        progressSegmentEl.style.top = '0';
+        progressSegmentEl.style.bottom = '0';
+        watchedSegments.appendChild(progressSegmentEl);
+      }
+    }
+
+    async function fetchProgress() {
+      try {
+        const res = await fetch(`http://localhost:5000/get-progress/${userId}`);
+        const data = await res.json();
+        segments = data.segments;
+        const progress = data.progress;
+        progressPercent.innerText = progress;
+        progressFill.style.width = progress + '%';
+        video.currentTime = data.last_position;
+        updateSegmentsVisualization();
+        updateTimeDisplays();
+        showNotification('Progress loaded successfully', 'info');
+      } catch (error) {
+        console.error('Error fetching progress:', error);
+        showNotification('Failed to load progress', 'error');
+      }
+    }
+
+    async function saveProgress() {
+      try {
+        const duration = video.duration;
+        const lastPosition = video.currentTime;
+        const res = await fetch('http://localhost:5000/save-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            segments: segments,
+            last_position: lastPosition,
+            duration: duration
+          })
+        });
+        const result = await res.json();
+        showNotification('Progress saved successfully');
+        console.log('Progress saved:', result);
+      } catch (error) {
+        console.error('Error saving progress:', error);
+        showNotification('Failed to save progress', 'error');
+      }
+    }
+
+    function mergeIntervals(intervals) {
+      if (intervals.length === 0) return [];
+      intervals.sort((a, b) => a[0] - b[0]);
+      let merged = [intervals[0]];
+      for (let i = 1; i < intervals.length; i++) {
+        let last = merged[merged.length - 1];
+        let curr = intervals[i];
+        if (curr[0] <= last[1]) {
+          last[1] = Math.max(last[1], curr[1]);
+        } else {
+          merged.push(curr);
+        }
+      }
+      return merged;
+    }
+
+    function calculateProgress(segments, duration) {
+      if (!duration) return 0;
+      let total = 0;
+      for (let [start, end] of segments) {
+        total += end - start;
+      }
+      return Math.min(100, ((total / duration) * 100).toFixed(1));
+    }
+
+    function updateTimeDisplays() {
+      if (!video.duration) return;
+      
+      // Update current time display
+      progressTime.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+      
+      // Calculate watched time
+      let total = 0;
+      for (let [start, end] of segments) {
+        total += end - start;
+      }
+      watchedTime.textContent = formatTime(total);
+      
+      // Calculate remaining time
+      const remaining = Math.max(0, video.duration - total);
+      remainingTime.textContent = formatTime(remaining);
+      
+      // Update total duration
+      totalDuration.textContent = formatTime(video.duration);
+    }
+
+    // Event Listeners
+    video.addEventListener('play', () => {
+      currentStart = video.currentTime;
+    });
+
+    video.addEventListener('pause', () => {
+      if (currentStart !== null) {
+        const end = video.currentTime;
+        if (end > currentStart) {
+          segments.push([currentStart, end]);
+          segments = mergeIntervals(segments);
+          const progress = calculateProgress(segments, video.duration);
+          progressPercent.innerText = progress;
+          progressFill.style.width = progress + '%';
+          updateSegmentsVisualization();
+          updateTimeDisplays();
+        }
+        currentStart = null;
+        saveProgress();
+      }
+    });
+
+    video.addEventListener('seeked', () => {
+      if (!video.paused) {
+        currentStart = video.currentTime;
+      }
+    });
+
+    video.addEventListener('timeupdate', () => {
+      // Update progress bar fill
+      const percentage = (video.currentTime / video.duration) * 100;
+      progressFill.style.width = percentage + '%';
+      
+      // Update time displays
+      progressTime.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+    });
+
+    video.addEventListener('loadedmetadata', () => {
+      updateTimeDisplays();
+      updateSegmentsVisualization();
+    });
+
+    video.addEventListener('ended', () => {
+      if (currentStart !== null) {
+        const end = video.currentTime;
+        if (end > currentStart) {
+          segments.push([currentStart, end]);
+          segments = mergeIntervals(segments);
+          const progress = calculateProgress(segments, video.duration);
+          progressPercent.innerText = progress;
+          progressFill.style.width = progress + '%';
+          updateSegmentsVisualization();
+          updateTimeDisplays();
+        }
+        currentStart = null;
+      }
+      
+      saveProgress();
+      showNotification(`Video ended. Final progress: ${progressPercent.innerText}%`);
+    });
+
+    // Progress bar seeking
+    progressBarContainer.addEventListener('click', (e) => {
+      const rect = progressBarContainer.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      video.currentTime = pos * video.duration;
+    });
+
+    // Hover preview for progress bar
+    progressBarContainer.addEventListener('mousemove', (e) => {
+      const rect = progressBarContainer.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      const time = pos * video.duration;
+      
+      hoverPreview.textContent = formatTime(time);
+      hoverPreview.style.left = `${e.clientX}px`;
+      hoverPreview.classList.remove('hidden');
+    });
+
+    progressBarContainer.addEventListener('mouseout', () => {
+      hoverPreview.classList.add('hidden');
+    });
+
+    // Button event listeners
+    restartBtn.addEventListener('click', () => {
+      video.currentTime = 0;
+      video.play();
+    });
+
+    saveBtn.addEventListener('click', () => {
+      saveProgress();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      segments = [];
+      updateSegmentsVisualization();
+      const progress = calculateProgress(segments, video.duration);
+      progressPercent.innerText = progress;
+      progressFill.style.width = progress + '%';
+      updateTimeDisplays();
+      saveProgress();
+      showNotification('Progress has been reset');
+    });
+
+    window.addEventListener('beforeunload', () => {
+      saveProgress();
+    });
+
+    window.addEventListener('load', () => {
+      fetchProgress();
+    });
+  </script>
+</body>
+</html>
